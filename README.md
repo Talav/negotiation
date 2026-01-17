@@ -195,31 +195,6 @@ The package defines several error types:
 - Parameters are sorted alphabetically for consistent matching
 - Malformed headers return `InvalidHeaderError`
 
-## Testing
-
-The library includes comprehensive unit tests covering all functionality. Tests are organized by component:
-
-- **Parser tests**: Header parsing, quality values, parameter handling
-- **Negotiator tests**: Media type, language, charset, and encoding negotiation
-- **Matcher tests**: Sorting and matching algorithms
-- **Error handling**: Comprehensive error case coverage
-
-```bash
-# Run all tests
-go test -v ./...
-
-# Run with race detector
-go test -race ./...
-
-# Run tests with coverage
-go test -v -coverpkg=./... -covermode=atomic -coverprofile=coverage.out ./...
-
-# View coverage in browser
-go tool cover -html=coverage.out
-
-# Run specific test
-go test -run TestNegotiator_Negotiate_MediaType -v
-```
 
 ## API Stability
 
