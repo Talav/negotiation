@@ -5,7 +5,7 @@
         "TZ": "${localEnv:TZ}"
     },
     // Fixed settings
-    "name": "tagparser",
+    "name": "negotiation",
     "dockerComposeFile": "docker-compose.yml",
     "overrideCommand": true,
     "service": "vscode",
