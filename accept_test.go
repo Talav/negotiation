@@ -7,37 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestHeader_Parameters(t *testing.T) {
+func TestNewMedia_Parameters(t *testing.T) {
 	acc, err := newMedia("foo/bar; q=1; hello=world")
 	require.NoError(t, err)
 
-	_, hasHello := acc.Parameters["hello"]
-	assert.True(t, hasHello)
+	// Test existing parameter
 	assert.Equal(t, "world", acc.Parameters["hello"])
-	_, hasUnknown := acc.Parameters["unknown"]
-	assert.False(t, hasUnknown)
 
-	// Test default value pattern (idiomatic Go: direct map access with ok check)
-	val, ok := acc.Parameters["unknown"]
-	if !ok {
-		val = ""
-	}
-	assert.Equal(t, "", val)
-
-	val, ok = acc.Parameters["unknown"]
-	if !ok {
-		val = "goodbye"
-	}
-	assert.Equal(t, "goodbye", val)
-
-	val, ok = acc.Parameters["hello"]
-	if !ok {
-		val = "goodbye"
-	}
-	assert.Equal(t, "world", val)
+	// Test non-existing parameter (should return zero value)
+	assert.Equal(t, "", acc.Parameters["unknown"])
 }
 
-func TestHeader_NormalizedValue(t *testing.T) {
+func TestNewMedia_NormalizedValue(t *testing.T) {
 	tests := []struct {
 		name     string
 		header   string
@@ -64,7 +45,7 @@ func TestHeader_NormalizedValue(t *testing.T) {
 	}
 }
 
-func TestHeader_Type(t *testing.T) {
+func TestNewMedia_Type(t *testing.T) {
 	tests := []struct {
 		name     string
 		header   string
@@ -94,7 +75,7 @@ func TestHeader_Type(t *testing.T) {
 	}
 }
 
-func TestHeader_Value(t *testing.T) {
+func TestNewMedia_Value(t *testing.T) {
 	tests := []struct {
 		name     string
 		header   string
@@ -128,4 +109,134 @@ func TestHeader_ParametersMap(t *testing.T) {
 	}
 	paramsCopy["charset"] = "ISO-8859-1"
 	assert.Equal(t, "UTF-8", acc.Parameters["charset"])
+}
+
+func TestNewLanguage_Type(t *testing.T) {
+	tests := []struct {
+		name         string
+		header       string
+		expectedType string
+		expectedBase string
+		expectedSub  string
+	}{
+		{"simple language", "en", "en", "en", ""},
+		{"language with region", "en-US", "en-us", "en", "us"},
+		{"language with script and region", "zh-Hans-CN", "zh-hans-cn", "zh", "cn"},
+		{"case insensitive", "EN-us", "en-us", "en", "us"},
+		{"with parameters", "en;q=0.8", "en", "en", ""},
+		{"with region and parameters", "fr-CA;q=0.9", "fr-ca", "fr", "ca"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			acc, err := newLanguage(tt.header)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedType, acc.Type)
+			assert.Equal(t, tt.expectedBase, acc.BasePart)
+			assert.Equal(t, tt.expectedSub, acc.SubPart)
+		})
+	}
+}
+
+func TestNewLanguage_Invalid(t *testing.T) {
+	tests := []struct {
+		name   string
+		header string
+	}{
+		{"too many parts", "en-US-CA-GB"},
+		{"four parts", "zh-Hans-CN-TW"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := newLanguage(tt.header)
+			assert.Error(t, err)
+			assert.IsType(t, &InvalidLanguageError{}, err)
+		})
+	}
+}
+
+func TestNewCharset_Type(t *testing.T) {
+	tests := []struct {
+		name         string
+		header       string
+		expectedType string
+	}{
+		{"simple charset", "utf-8", "utf-8"},
+		{"uppercase", "UTF-8", "utf-8"},
+		{"with parameters", "iso-8859-1;q=0.9", "iso-8859-1"},
+		{"case insensitive", "UTF-8", "utf-8"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			acc, err := newCharset(tt.header)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedType, acc.Type)
+			assert.Equal(t, "", acc.BasePart)
+			assert.Equal(t, "", acc.SubPart)
+		})
+	}
+}
+
+func TestNewEncoding_Type(t *testing.T) {
+	tests := []struct {
+		name         string
+		header       string
+		expectedType string
+	}{
+		{"gzip", "gzip", "gzip"},
+		{"deflate", "deflate", "deflate"},
+		{"identity", "identity", "identity"},
+		{"with parameters", "gzip;q=0.8", "gzip"},
+		{"case insensitive", "GZIP", "gzip"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			acc, err := newEncoding(tt.header)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedType, acc.Type)
+			assert.Equal(t, "", acc.BasePart)
+			assert.Equal(t, "", acc.SubPart)
+		})
+	}
+}
+
+func TestNewCharset_Value(t *testing.T) {
+	tests := []struct {
+		name     string
+		header   string
+		expected string
+	}{
+		{"with spaces", "utf-8 ; q=0.9", "utf-8 ; q=0.9"},
+		{"simple", "iso-8859-1", "iso-8859-1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			acc, err := newCharset(tt.header)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, acc.Value)
+		})
+	}
+}
+
+func TestNewEncoding_Value(t *testing.T) {
+	tests := []struct {
+		name     string
+		header   string
+		expected string
+	}{
+		{"with spaces", "gzip ; q=1.0", "gzip ; q=1.0"},
+		{"simple", "deflate", "deflate"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			acc, err := newEncoding(tt.header)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expected, acc.Value)
+		})
+	}
 }

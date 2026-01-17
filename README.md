@@ -9,8 +9,6 @@
 
 Go library for HTTP content negotiation based on RFC 7231 with support for media types, languages, charsets, and encodings. Provides comprehensive content negotiation tools for building robust HTTP services.
 
-**Requires Go 1.25 or later.**
-
 ## Features
 
 - **Media Type Negotiation** - Negotiate based on `Accept` headers
