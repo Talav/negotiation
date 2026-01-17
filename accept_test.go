@@ -75,6 +75,25 @@ func TestNewMedia_Type(t *testing.T) {
 	}
 }
 
+func TestNewMedia_Invalid(t *testing.T) {
+	tests := []struct {
+		name   string
+		header string
+	}{
+		{"no slash", "text"},
+		{"empty type", "/html"},
+		{"empty subtype", "text/"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := newMedia(tt.header)
+			assert.Error(t, err)
+			assert.IsType(t, &InvalidMediaTypeError{}, err)
+		})
+	}
+}
+
 func TestNewMedia_Value(t *testing.T) {
 	tests := []struct {
 		name     string

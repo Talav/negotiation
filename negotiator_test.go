@@ -255,3 +255,75 @@ func TestNegotiator_WildcardMatching(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "text/html", result.Type)
 }
+
+func TestNegotiator_StrictMode_ParseError(t *testing.T) {
+	negotiator := NewMediaNegotiator()
+
+	// Test that parsing errors are returned in strict mode
+	_, err := negotiator.Negotiate(`text/html;q="unclosed quote`, []string{"text/html"}, true)
+	assert.Error(t, err)
+}
+
+func TestNegotiator_ComplexMatching(t *testing.T) {
+	negotiator := NewMediaNegotiator()
+
+	tests := []struct {
+		name         string
+		acceptHeader string
+		priorities   []string
+		expectedType string
+	}{
+		{
+			name:         "subtype wildcard match",
+			acceptHeader: "text/*",
+			priorities:   []string{"application/json", "text/html", "text/plain"},
+			expectedType: "text/html",
+		},
+		{
+			name:         "full wildcard fallback",
+			acceptHeader: "*/*",
+			priorities:   []string{"application/json", "text/html"},
+			expectedType: "application/json",
+		},
+		{
+			name:         "parameter exact match preferred",
+			acceptHeader: "text/html;level=1, text/html",
+			priorities:   []string{"text/html", "text/html;level=1"},
+			expectedType: "text/html",
+		},
+		{
+			name:         "suffix matching",
+			acceptHeader: "application/vnd.api+json",
+			priorities:   []string{"application/json", "application/vnd.api+json"},
+			expectedType: "application/vnd.api+json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := negotiator.Negotiate(tt.acceptHeader, tt.priorities, false)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedType, result.Type)
+		})
+	}
+}
+
+func TestNegotiator_AllPrioritiesInvalid(t *testing.T) {
+	negotiator := NewMediaNegotiator()
+
+	// Test when all priorities fail to parse in non-strict mode
+	result, err := negotiator.Negotiate("text/html", []string{"invalid/format", "also/invalid"}, false)
+	assert.Error(t, err)
+	assert.Equal(t, ErrNoMatch, err)
+	assert.Nil(t, result)
+}
+
+func TestNegotiator_EmptyAcceptHeader(t *testing.T) {
+	negotiator := NewMediaNegotiator()
+
+	// Test GetOrderedElements with empty accept header in non-strict mode
+	elements, err := negotiator.GetOrderedElements("")
+	assert.Error(t, err)
+	assert.Nil(t, elements)
+	assert.Equal(t, &InvalidArgumentError{Message: "the header string should not be empty"}, err)
+}

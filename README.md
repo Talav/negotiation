@@ -39,7 +39,7 @@ func main() {
     acceptHeader := "text/html, application/json;q=0.9, */*;q=0.8"
     priorities := []string{"application/json", "text/html"}
 
-    best, err := negotiator.GetBest(acceptHeader, priorities, false)
+    best, err := negotiator.Negotiate(acceptHeader, priorities, false)
     if err != nil {
         panic(err)
     }
@@ -75,7 +75,7 @@ func main() {
     acceptHeader := "text/html, application/xhtml+xml, application/xml;q=0.9, */*;q=0.8"
     priorities := []string{"application/json", "application/xml", "text/html"}
     
-    best, err := negotiator.GetBest(acceptHeader, priorities, false)
+    best, err := negotiator.Negotiate(acceptHeader, priorities, false)
     if err != nil {
         panic(err)
     }
@@ -170,10 +170,11 @@ for _, elem := range elements {
 
 The package defines several error types:
 
-- `ErrInvalidArgument` - Invalid argument provided
-- `ErrInvalidHeader` - Header cannot be parsed
-- `ErrInvalidMediaType` - Invalid media type format
-- `ErrInvalidLanguage` - Invalid language tag format
+- `InvalidArgumentError` - Invalid argument provided
+- `InvalidHeaderError` - Header cannot be parsed
+- `InvalidMediaTypeError` - Invalid media type format
+- `InvalidLanguageError` - Invalid language tag format
+- `ErrNoMatch` - No matching header found
 
 ## Limitations and Best Practices
 
@@ -192,7 +193,33 @@ The package defines several error types:
 - Headers are parsed case-insensitively for media types and charsets
 - Language tags are normalized to lowercase
 - Parameters are sorted alphabetically for consistent matching
-- Malformed headers return `ErrInvalidHeader`
+- Malformed headers return `InvalidHeaderError`
+
+## Testing
+
+The library includes comprehensive unit tests covering all functionality. Tests are organized by component:
+
+- **Parser tests**: Header parsing, quality values, parameter handling
+- **Negotiator tests**: Media type, language, charset, and encoding negotiation
+- **Matcher tests**: Sorting and matching algorithms
+- **Error handling**: Comprehensive error case coverage
+
+```bash
+# Run all tests
+go test -v ./...
+
+# Run with race detector
+go test -race ./...
+
+# Run tests with coverage
+go test -v -coverpkg=./... -covermode=atomic -coverprofile=coverage.out ./...
+
+# View coverage in browser
+go tool cover -html=coverage.out
+
+# Run specific test
+go test -run TestNegotiator_Negotiate_MediaType -v
+```
 
 ## API Stability
 
@@ -202,7 +229,7 @@ This library follows semantic versioning. The public API is stable for v1.x:
 - `NewMediaNegotiator()`, `NewLanguageNegotiator()`, `NewCharsetNegotiator()`, `NewEncodingNegotiator()`
 - `Negotiator.Negotiate(header, priorities, strict)`, `Negotiator.GetOrderedElements(header)`
 - `Header` struct and all exported fields
-- All exported error types: `ErrInvalidArgument`, `ErrInvalidHeader`, `ErrInvalidMediaType`, `ErrInvalidLanguage`
+- All exported error types: `InvalidArgumentError`, `InvalidHeaderError`, `InvalidMediaTypeError`, `InvalidLanguageError`, `ErrNoMatch`
 
 ## Development Commands
 
