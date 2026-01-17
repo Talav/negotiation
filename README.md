@@ -1,9 +1,11 @@
 # Negotiation
 
+[![tag](https://img.shields.io/github/tag/talav/negotiation.svg)](https://github.com/talav/negotiation/releases)
 [![Go Reference](https://pkg.go.dev/badge/github.com/talav/negotiation.svg)](https://pkg.go.dev/github.com/talav/negotiation)
 [![Go Report Card](https://goreportcard.com/badge/github.com/talav/negotiation)](https://goreportcard.com/report/github.com/talav/negotiation)
 [![CI](https://github.com/talav/negotiation/actions/workflows/negotiation-ci.yml/badge.svg)](https://github.com/talav/negotiation/actions)
-[![codecov](https://codecov.io/gh/Talav/negotiation/graph/badge.svg)](https://codecov.io/gh/Talav/negotiation)
+[![codecov](https://codecov.io/gh/talav/negotiation/graph/badge.svg)](https://codecov.io/gh/talav/negotiation)
+[![License](https://img.shields.io/github/license/talav/negotiation)](./LICENSE)
 
 Go library for HTTP content negotiation based on RFC 7231 with support for media types, languages, charsets, and encodings. Provides comprehensive content negotiation tools for building robust HTTP services.
 
@@ -238,6 +240,3 @@ Developed by [Talav](https://github.com/talav).
 **Questions?** Open an issue or discussion on GitHub.
 
 **Found a bug?** Please report it with a minimal reproduction case.
-```
-
-
