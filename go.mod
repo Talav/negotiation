@@ -1,4 +1,4 @@
-module github.com/talav/talav/pkg/component/negotiation
+module github.com/talav/negotiation
 
 go 1.25.0
 
